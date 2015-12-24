@@ -4,9 +4,9 @@ from functools import partial
 def sum_values(ob):
     """json doesn't allow for numeric object keys"""
     if isinstance(ob, list):
-        return sum(map(sum_values, ob))
+        return sum([sum_values(o) for o in ob])
     elif isinstance(ob, dict):
-        return sum(map(sum_values, ob.values()))
+        return sum([sum_values(o) for o in ob.values()])
     elif isinstance(ob, int):
         return ob
     else:
