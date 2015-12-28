@@ -1,5 +1,5 @@
 from collections import namedtuple, OrderedDict
-from itertools import permutations
+from itertools import permutations, product
 
 Ingredient = namedtuple('Ingredient', ["name", "capacity", "durability", "flavor", "texture", "calories"])
 qualities = ('capacity', 'durability', 'flavor', 'texture', 'calories')
@@ -19,6 +19,10 @@ def get_data():
     return data
 
 
+def yield_subset_sum(target, the_len):
+    for y in product(range(target+1), repeat=the_len):
+        if sum(y) == target:
+            yield y
 
 def subset_sum(numbers, target, partial, the_len):
     s = sum(partial)
@@ -41,36 +45,24 @@ def subset_sum(numbers, target, partial, the_len):
 
 
 def special_mult(*args):
-    for a in args:
-        if a < 0:
-            return 0
-    return reduce(lambda x,y: x*y, args)
+    return reduce(lambda x, y: max(x, 0) * max(y, 0), args)
 
 def evaluate_recipe_quality(ingredients, quantities, include_calories=False):
     """When include_calories=True, target a 500 calorie recipe"""
     def evaluate_ingredient(i, q):
-        try:
-            rv = [ q * prop for prop in i[1:] ]
-            return rv
-        except TypeError as te:
-            print "TypeError ingredients: {}, quantities:{}, include_calorie: {}".format(
-                ingredients, quantities, include_calories)
-            raise
+        return [ q * prop for prop in i[1:] ]
 
     quals = map(evaluate_ingredient, ingredients.values(), quantities)
     combined_quals = map(sum, zip(*quals))
-    if include_calories:
-        if combined_quals[-1] == 500:
-            return reduce(special_mult, combined_quals[:-1])
-        else:
-            return 0
-    else:
-        return reduce(special_mult, combined_quals[:-1])
+    if include_calories and combined_quals[-1] != 500:
+        return 0
+    return reduce(special_mult, combined_quals[:-1])
 
 
 def yield_recipe_quality(ingredients, include_calories=False):
     """This is for part 1, it doesn't count calories"""
-    for target in subset_sum(range(100), 100, [], len(ingredients)):
+    # for target in subset_sum(range(100), 100, [], len(ingredients)):
+    for target in yield_subset_sum(100, len(ingredients)):
         for c in permutations(target):
             quality = evaluate_recipe_quality(ingredients, c, include_calories)
             if quality > 0:
